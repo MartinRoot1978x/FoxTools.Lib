@@ -24,11 +24,11 @@
 
 ```HTML
 <form id="apiForm" 
-			action="http://api.foxtools.ru/v2/Hash" 
-			method="post" 
-			data-begin="Request_Start" 
-			data-complete="Request_Complete" 
-			data-token="/GetToken"
+ action="http://api.foxtools.ru/v2/Hash" 
+ method="post" 
+ data-begin="Request_Start" 
+ data-complete="Request_Complete" 
+ data-token="/GetToken"
 >
 	<textarea name="text" rows="10" cols="76"></textarea><br />
 	<input type="submit" value="Отправить" />
@@ -139,6 +139,6 @@ r.complete = function (result: foxtools.result) {
 	}
 };
 
-// Для выполнения запроса, следует вызвать метод execute:
+// Для выполнения запроса следует вызвать метод execute:
 r.execute();
 ```
