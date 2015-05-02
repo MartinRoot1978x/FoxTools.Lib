@@ -7,7 +7,7 @@
 
 **Хитрая библиотека** предоставляется по лицензии [Apache 2.0](http://www.apache.org/licenses/LICENSE-2.0).
 
-Представленный здесь код **JavaScript** является результатом сборки кода **TypeScript**, который можно найти в [одноименной папке корневого каталога проекта](https://github.com/alekseynemiro/FoxTools.Lib/tree/master/TypeScript).
+**Примечание:** Представленный здесь код **JavaScript** является результатом сборки кода **TypeScript**, который можно найти в [одноименной папке корневого каталога проекта](https://github.com/alekseynemiro/FoxTools.Lib/tree/master/TypeScript).
 
 ### Требования
 
