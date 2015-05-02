@@ -75,6 +75,8 @@ function Request_Complete(result) {
 
 #### Отправка запроса вручную
 
+При необходимости, можно отправить запрос к **API** без использования форм.
+
 ```JavaScript
 // Создаем хитрый запрос к api:
 var r = new foxtools.request('hash');
