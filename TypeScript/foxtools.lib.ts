@@ -1,4 +1,4 @@
-﻿/*! Хитрая (клиентская) библиотека для работы с не менее Хитрым API v2.0
+﻿/*! Хитрая библиотека для работы с не менее Хитрым API v2.0
  * http://api.foxtools.ru/v2
  * http://foxtools.ru
  * 
@@ -49,7 +49,7 @@ module foxtools {
 		public complete: (result: any) => any;
 
 		/** Функция, которая будет вызвана перед отправкой запроса. */
-		public begin: (xhr: any) => any;
+		public begin: (data: beginRequest) => any;
 
 		/** 
 		 * Функция, которая будет вызываться при изменении процесса отправки запроса на хитрый сервер.
@@ -309,21 +309,21 @@ module foxtools {
 			var form = $request.form;
 			var $form = $($request.form);
 
-			var enctype = null;
+			//var enctype = $form.attr('enctype');
 			var type = $form.attr('method') || 'GET';
 
 			if ($('input[type=file]', form).length > 0) {
 				type = 'POST';
-				enctype = 'multipart/form-data';
+				//enctype = 'multipart/form-data';
 			}
 
-			if (type.toUpperCase() == 'POST' && !enctype) {
-				enctype = 'application/x-www-form-urlencoded';
-			}
+			//if (type.toUpperCase() == 'POST' && (enctype === undefined || enctype === null || enctype == '')) {
+				//enctype = 'application/x-www-form-urlencoded';
+			//}
 
 			var data = null;
 
-			if (type.toUpperCase() == 'POST' && enctype == 'multipart/form-data') {
+			if (type.toUpperCase() == 'POST') { // && enctype == 'multipart/form-data'
 				data = new FormData(form);
 			} else {
 				data = $form.serialize();
@@ -355,7 +355,6 @@ module foxtools {
 
 			$.ajax({
 				type: type,
-				enctype: enctype,
 				url: $form.attr('action'),
 				data: data,
 				dataType: 'json', //jsonp
@@ -500,17 +499,17 @@ module foxtools {
 			var $request = this;
 
 			// определяем тип запроса и тип содержимого
-			var enctype = null;
+			//var enctype = null;
 			var type = $request.type || 'GET';
 
 			if ($request.parameters.hasFiles) {
 				type = 'POST';
-				enctype = 'multipart/form-data';
+				//enctype = 'multipart/form-data';
 			}
 
-			if (type.toUpperCase() == 'POST' && !enctype) {
-				enctype = 'application/x-www-form-urlencoded';
-			}
+			//if (type.toUpperCase() == 'POST' && (enctype === undefined || enctype === null || enctype == '')) {
+				//enctype = 'application/x-www-form-urlencoded';
+			//}
 
 			// если указан маркер доступа, используем его для данного запроса
 			var headers = null;
@@ -535,7 +534,7 @@ module foxtools {
 
 			$.ajax({
 				url: $request.endpoint,
-				enctype: enctype,				type: type,				//dataType: 'jsonp',				headers: headers,				xhr: function () {
+				type: type,				//dataType: 'jsonp',				headers: headers,				xhr: function () {
 					var xhr = $.ajaxSettings.xhr();
 					if (xhr.upload) {
 						xhr.upload.addEventListener('progress', function (e) {
@@ -1001,6 +1000,11 @@ module foxtools {
 			this.pageCount = data.pageCount;
 		}
 
+		/** Возвращает строковое значение результата выполнения запроса к API. */
+		public toString() {
+			return this.items.join('\n');
+		}
+
 	}
 
 	/** Представляет результат расчета хеш-суммы. */
@@ -1014,7 +1018,7 @@ module foxtools {
 
 			if (items !== undefined && items !== null) {
 				for (var i = 0; i <= items.length - 1; i++) {
-					this.add(items[i].code, items[i].text);
+					this.add(items[i].type, items[i].value);
 				}
 			}
 		}
