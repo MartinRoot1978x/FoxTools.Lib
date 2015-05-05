@@ -243,13 +243,9 @@ module foxtools {
 		/** Указываает на необходимость отмены выполнение запроса. */
 		public cancel: boolean = false;
 
-		/** Параметры, которые будут отправлены. */
-		public data: any = null;
-
-		constructor(request: requestProcess, token: foxtoolsToken, data: any) {
+		constructor(request: requestProcess, token: foxtoolsToken) {
 			this.request = request;
 			this.token = token;
-			this.data = data;
 		}
 
 	}
@@ -321,13 +317,6 @@ module foxtools {
 				//enctype = 'application/x-www-form-urlencoded';
 			//}
 
-			var data = null;
-
-			if (type.toUpperCase() == 'POST') { // && enctype == 'multipart/form-data'
-				data = new FormData(form);
-			} else {
-				data = $form.serialize();
-			}
 
 			var headers = null;
 
@@ -341,15 +330,24 @@ module foxtools {
 
 			// если есть обработчик, делаем событие begin
 			if ($request.begin !== undefined && $request.begin !== null && typeof $request.begin === 'function') {
-				var eventData = new beginRequest(<requestProcess>$request, token, data);
+				var eventData = new beginRequest(<requestProcess>$request, token);
 				$request.begin(eventData);
 				// запрос отменен
 				if (eventData.cancel) {
 					return;
 				}
-				data = eventData.data;
+				form = $request.form;
+				$form = $(form);
 			}
 			// --
+
+			var data = null;
+
+			if (type.toUpperCase() == 'POST') { // && enctype == 'multipart/form-data'
+				data = new FormData(form);
+			} else {
+				data = $form.serialize();
+			}
 
 			utility.yah($form.attr('action'), methodName);
 
@@ -517,18 +515,17 @@ module foxtools {
 				headers = { Authorization: 'Bearer ' + token.value };
 			}
 
-			var data = (type == 'GET' ? $.param($request.parameters.toParams()) : $request.parameters.toParams());
-
 			// если есть обработчик, делаем событие begin
 			if ($request.begin !== undefined && $request.begin !== null && typeof $request.begin === 'function') {
-				var eventData = new beginRequest(<requestProcess>$request, token, data);
+				var eventData = new beginRequest(<requestProcess>$request, token);
 				$request.begin(eventData);
 				// запрос отменен
 				if (eventData.cancel) {
 					return;
 				}
-				data = eventData.data;
 			}
+
+			var data = $request.parameters.toParams(type);
 
 			utility.yah($request.endpoint, $request.methodName);
 
@@ -609,20 +606,26 @@ module foxtools {
 			this.items.push(new httpParameter(name, value));
 		}
 
-		/** Возвращает параметры в виде объекта для выполнения запроса. */
-		public toParams(): Object {
+		/** 
+		 * Возвращает параметры в виде объекта для выполнения запроса. 
+		 * @param type Тип HTTP запроса: GET или POST.
+		 */
+		public toParams(type: string): Object {
+			if (this.hasFiles || type === undefined || type === null) {
+				type = 'POST';
+			}
+			type = type.toUpperCase();
+
 			var result = null;
 
-			// смотрим, если есть файлы, то делаем FormData
-			var hasFiles = this.hasFiles;
-			if (hasFiles) {
+			if (type == 'POST') {
 				result = new FormData();
 			} else {
-				result = new Object();
+			 result = new Object();
 			}
 
 			for (var i = 0; i <= this.items.length - 1; i++) {
-				if (hasFiles) {
+				if (type == 'POST') {
 					if (this.items[i].isFile) {
 						if (this.items[i].value.length == 1) {
 							result.append(this.items[i].name, this.items[i].value[0]);
@@ -642,7 +645,11 @@ module foxtools {
 				}
 			}
 
-			return result;
+			if (type == 'POST') {
+				return result;
+			} else {
+				return $.param(result);
+			}
 		}
 		
 		/** Возвращает true, если в коллекции есть файлы.*/

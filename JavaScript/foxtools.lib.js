@@ -213,18 +213,15 @@ var foxtools;
 
     /** Представляет аргументы события начала выполнения запроса. */
     var beginRequest = (function () {
-        function beginRequest(request, token, data) {
+        function beginRequest(request, token) {
             /** Ссылка на запрос, который будет выполняться. */
             this.request = null;
             /** Маркер доступа, который будет использоваться. */
             this.token = null;
             /** Указываает на необходимость отмены выполнение запроса. */
             this.cancel = false;
-            /** Параметры, которые будут отправлены. */
-            this.data = null;
             this.request = request;
             this.token = token;
-            this.data = data;
         }
         return beginRequest;
     })();
@@ -293,14 +290,6 @@ var foxtools;
             //if (type.toUpperCase() == 'POST' && (enctype === undefined || enctype === null || enctype == '')) {
             //enctype = 'application/x-www-form-urlencoded';
             //}
-            var data = null;
-
-            if (type.toUpperCase() == 'POST') {
-                data = new FormData(form);
-            } else {
-                data = $form.serialize();
-            }
-
             var headers = null;
 
             // маркер доступа, если указан
@@ -313,17 +302,26 @@ var foxtools;
 
             // если есть обработчик, делаем событие begin
             if ($request.begin !== undefined && $request.begin !== null && typeof $request.begin === 'function') {
-                var eventData = new beginRequest($request, token, data);
+                var eventData = new beginRequest($request, token);
                 $request.begin(eventData);
 
                 // запрос отменен
                 if (eventData.cancel) {
                     return;
                 }
-                data = eventData.data;
+                form = $request.form;
+                $form = $(form);
             }
 
             // --
+            var data = null;
+
+            if (type.toUpperCase() == 'POST') {
+                data = new FormData(form);
+            } else {
+                data = $form.serialize();
+            }
+
             utility.yah($form.attr('action'), methodName);
 
             $.ajax({
@@ -483,19 +481,18 @@ var foxtools;
                 headers = { Authorization: 'Bearer ' + token.value };
             }
 
-            var data = (type == 'GET' ? $.param($request.parameters.toParams()) : $request.parameters.toParams());
-
             // если есть обработчик, делаем событие begin
             if ($request.begin !== undefined && $request.begin !== null && typeof $request.begin === 'function') {
-                var eventData = new beginRequest($request, token, data);
+                var eventData = new beginRequest($request, token);
                 $request.begin(eventData);
 
                 // запрос отменен
                 if (eventData.cancel) {
                     return;
                 }
-                data = eventData.data;
             }
+
+            var data = $request.parameters.toParams(type);
 
             utility.yah($request.endpoint, $request.methodName);
 
@@ -580,20 +577,26 @@ var foxtools;
             this.items.push(new httpParameter(name, value));
         };
 
-        /** Возвращает параметры в виде объекта для выполнения запроса. */
-        httpParameterCollection.prototype.toParams = function () {
+        /**
+        * Возвращает параметры в виде объекта для выполнения запроса.
+        * @param type Тип HTTP запроса: GET или POST.
+        */
+        httpParameterCollection.prototype.toParams = function (type) {
+            if (this.hasFiles || type === undefined || type === null) {
+                type = 'POST';
+            }
+            type = type.toUpperCase();
+
             var result = null;
 
-            // смотрим, если есть файлы, то делаем FormData
-            var hasFiles = this.hasFiles;
-            if (hasFiles) {
+            if (type == 'POST') {
                 result = new FormData();
             } else {
                 result = new Object();
             }
 
             for (var i = 0; i <= this.items.length - 1; i++) {
-                if (hasFiles) {
+                if (type == 'POST') {
                     if (this.items[i].isFile) {
                         if (this.items[i].value.length == 1) {
                             result.append(this.items[i].name, this.items[i].value[0]);
@@ -613,7 +616,11 @@ var foxtools;
                 }
             }
 
-            return result;
+            if (type == 'POST') {
+                return result;
+            } else {
+                return $.param(result);
+            }
         };
 
         Object.defineProperty(httpParameterCollection.prototype, "hasFiles", {
