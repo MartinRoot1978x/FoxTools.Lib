@@ -1,4 +1,4 @@
-﻿## Хитрая библиотека v1.0-beta
+﻿## Хитрая библиотека v1.0.2
 
 **Хитрая библиотека** предназначения для работы с **[Хитрым API v2.0](http://api.foxtools.ru/v2)**.
 
@@ -7,26 +7,28 @@
 
 **Хитрая библиотека** предоставляется по лицензии [Apache 2.0](http://www.apache.org/licenses/LICENSE-2.0).
 
-**Примечание:** Представленный здесь код **JavaScript** является результатом сборки кода **TypeScript**, который можно найти в [одноименной папке корневого каталога проекта](https://github.com/alekseynemiro/FoxTools.Lib/tree/master/TypeScript).
-
 ### Требования
 
 * jQuery v1.8 или новее.
 
+Библиотека написана на **TypeScript v1.4**. Для **TypeScript** могут потребоваться дополнительные файлы определения типов.
+
 ### Использование
 
-Подключите файл **Хитрой библиотеки** к странице, на которой будет производиться работа с **Хитрмы API**.
+Подключите файл **Хитрой библиотеки** к странице, на которой будет производиться работа с **API**.
 
 ```HTML
 <script src="/scripts/foxtools.lib.min.js" type="text/javascript"></script>
 ```
 
+Также можно использовать прямые ссылки из хранилища: http://lib.foxtools.ru/
+
 #### Подключение к форме
 
-Вы можете создать на html-странице обычную форму, которая будет отправлять запросы **Хитрому API**:
+Вы можете создать на html-странице обычную форму, которая будет отправлять запросы **API**:
 
 ```HTML
-<form id="apiForm" 
+<form id="myform" 
  action="http://api.foxtools.ru/v2/Hash" 
  method="post" 
  data-begin="Request_Start" 
@@ -53,7 +55,7 @@
 
 ```JavaScript
 // Делаем обычную форму хитрой:
-fox('#apiForm'); // apiForm - id формы
+foxtools.apiForm('#myform'); // myform - id формы
 
 function Request_Start(e) {
 	// если что-то не устраивает, то можно запретить отправку запроса
@@ -79,7 +81,7 @@ function Request_Complete(result) {
 
 ```JavaScript
 // Создаем хитрый запрос к api:
-var r = new foxtools.request('hash');
+var r = new foxtools.lib.request('hash');
 
 // Добавляем параметры запроса:
 r.parameters.add('text', 'hello world!');
@@ -130,6 +132,139 @@ r.complete = function (result) {
 	if (result.isError) {
 		// при помощи метода getText() можно получить текст возникших ошибок
 		console.log(result.data.getText());
+	} else {
+		// разные методы API возвращают ответы в разных форматах,
+		// подробную информацию об ответах можно найти в справочнике:
+		// http://api.foxtools.ru/v2
+		console.log(result);
+	}
+};
+
+// Для выполнения запроса следует вызвать метод execute:
+r.execute();
+```
+
+### Использование TypeScript
+
+В голом виде код **TypeScript** использовать нельзя, его нужно компилировать в **JavaScript**.
+
+**Visual Studio 2013** с **[Web Essentials](http://vswebessentials.com/)** делает это без проблем.
+
+Работа с **TypeScript** особо ничем от **JavaScript** не отличается, разве что немного удобней.
+
+#### Подключение к форме
+
+Вы можете создать на html-странице обычную форму, которая будет отправлять запросы в **API**:
+
+```HTML
+<form id="myform" 
+ action="http://api.foxtools.ru/v2/Hash" 
+ method="post" 
+ data-begin="Request_Start" 
+ data-complete="Request_Complete" 
+ data-token="/GetToken"
+>
+	<textarea name="text" rows="10" cols="76"></textarea><br />
+	<input type="submit" value="Отправить" />
+</form>
+```
+
+Параметр ```action``` должен указывать на страницу метода **API**, для которого создана форма. 
+В данном случае будет отправлен запрос методу [расчета хеш-суммы](http://api.foxtools.ru/v2/Help/Hash).
+
+Значение параметра ```method``` может определяться библиотекой автоматически, в зависимости от содержания формы, но лучше всегда использовать метод ```POST```.
+
+Параметр ```data-begin``` содержит имя клиентской функции, которая будет вызвана перед отправкой запроса.
+
+Параметр ```data-complete``` содержит имя клиентской функции, которая будет вызвана после получения от сервера ответа на указанный запрос.
+
+Параметр ```data-token``` содержит адрес локальной странички, которая вернет маркер доступа для выполнения запроса к **API**.
+
+Код **TypeScript** будет следующим:
+
+```TypeScript
+// Подключаем хитрую библиотеку:
+/// <reference path="foxtools.lib.ts"/> 
+
+// Делаем обычную форму хитрой:
+foxtools.apiForm('#myform'); // myform - id формы
+
+function Request_Start(e: foxtools.lib.beginRequest) {
+	// если что-то не устраивает, то можно запретить отправку запроса
+	// e.cancel = true;
+}
+
+function Request_Complete(result: foxtools.lib.result) {
+	if (result.isError) {
+		// при помощи метода getText() можно получить текст возникших ошибок
+		console.log((<foxtools.lib.errorResult>result.data).getText());
+	} else {
+		// разные методы API возвращают ответы в разных форматах,
+		// подробную информацию об ответах можно найти в справочнике:
+		// http://api.foxtools.ru/v2
+		console.log(result);
+	}
+}
+```
+
+#### Отправка запроса вручную
+
+```TypeScript
+// Подключаем хитрую библиотеку:
+/// <reference path="foxtools.lib.ts"/> 
+
+// Создаем хитрый запрос к api:
+var r = new foxtools.lib.request('hash');
+
+// Добавляем параметры запроса:
+r.parameters.add('text', 'hello world!');
+
+// Список ожидаемых методом параметров можно найти в справочнике:
+// http://api.foxtools.ru/v2
+
+// Можно добавить файл, просто указан элемент <input type="file" />
+// r.parameters.add($('[type=file]'));
+// или с указанием имени параметра
+// r.parameters.add('file', $('[type=file]'));
+
+// В сутки с одного ip можно делать не более 1 000 запросов.
+// Если вашим пользователям нужно больше запросов,
+// то вы можете выдать пользователю маркер доступа,
+// тогда запросы будут идти от вашего appId, без ограничений.
+// 
+// Создайте на своем сервере страницу, которая будет делать запрос к API
+// и возвращать маркер доступа.
+// В идеале, если эта страница будет принимать запросы методом POST и 
+// возвращать маркер доступа в виде обычной строки.
+// 
+// Адрес страницы укажите в свойстве token. Все остальное сделается автоматически.
+// r.token = 'http://localhost/GetToken';
+// 
+// Если у вас сайт на ASP.NET, то серверный код этой страницы может быть таким для MVC:
+// 
+// return Content(new FoxTools.Lib2.ApiClient().GetToken(), "text/plain");
+// 
+// или для WebForms:
+// 
+// Response.Clear();
+// Response.ContentType = "text/plain";
+// Response.Write(new FoxTools.Lib2.ApiClient().GetToken());
+// 
+// Подобная схема позволит сохранить в секрете идентификатор вашего приложения
+// и секретный ключ.
+
+// Если вы отправляете на сервер файлы, то можно отследить процесс отправки.
+// Для этого следует добавить обработчик для события uploading:
+r.uploading = function (percent) {
+	console.log('Отправлено: ' + percent + '%');
+}
+
+// Получить результат выполнения запроса можно добавив обработчик событию complete:
+r.complete = function (result: foxtools.lib.result) {
+	// если сервер вернет ошибку, то свойство isError будет равно true
+	if (result.isError) {
+		// при помощи метода getText() можно получить текст возникших ошибок
+		console.log((<foxtools.lib.errorResult>result.data).getText());
 	} else {
 		// разные методы API возвращают ответы в разных форматах,
 		// подробную информацию об ответах можно найти в справочнике:
